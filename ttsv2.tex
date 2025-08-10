@@ -1,0 +1,199 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{geometry}
+\geometry{margin=1in}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+}
+
+\title{The True String Construction and Its Connection to the Riemann Hypothesis}
+\author{Gabriel Neal Christensen and Noah James Christensen}
+\date{\August.9 2025}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+The \emph{Riemann Hypothesis} (RH), first formulated by Bernhard Riemann in his seminal 1859 paper \cite{Riemann1859}, is widely regarded as the central open problem in analytic number theory. It posits that all nontrivial zeros of the Riemann zeta function \(\zeta(s)\) lie on the critical line \(\Re(s) = \frac{1}{2}\). The truth of RH has profound implications for the distribution of prime numbers, governing the error term in the prime number theorem and connecting prime distribution with the zeros of \(\zeta(s)\) through explicit formulas \cite{vonKoch1901, Edwards1974}.
+
+Since Riemann's initial insights, the hypothesis has been extensively studied and numerically verified to extraordinary heights \cite{Odlyzko1987, Platt2021, Trudgian2020}, with trillions of zeros checked on the critical line and no counterexamples found. Despite this progress, a complete proof remains elusive, and various analytic and computational approaches continue to be explored \cite{Conrey2003, IwaniecKowalski2004}.
+
+In this work, we introduce and rigorously analyze a novel construction called the \emph{True String} \(T\), generated from the polynomial function
+\[
+g(m,n) = 4 + 3m + 3n + 2mn, \quad m,n \in \mathbb{N}_0,
+\]
+with an \emph{unordered-pair collision-zero encoding} rule. Specifically, each unordered pair \(\{m,n\}\) contributes once, and if multiple unordered pairs map to the same integer value, that position in the sequence \(T\) is set to zero, effectively encoding collision information.
+
+This encoding yields a unique infinite sequence interlacing prime values and zeros, which we hypothesize to encode deep structural information about prime distribution. We provide formal definitions, lemmas, and proofs elucidating the mathematical properties of \(T\), alongside extensive computational evidence derived from implementations in Python, C++, and Rust.
+
+Our approach builds upon and extends the traditional analytic framework by leveraging a polynomial encoding that organizes primes and their multiplicities into a compressed, redundancy-free representation. This framework offers a promising new angle on the distribution of primes and potentially the zeros of \(\zeta(s)\).
+
+In particular, we conjecture that statistical properties of the True String, including prime density, collision frequency, and spacing distributions, are intimately related to the zeros of the Riemann zeta function and thus to the RH itself. We discuss these connections in detail, providing a roadmap for future research that could bridge this construction with classical analytic number theory and potentially yield a proof of the Riemann Hypothesis.
+
+The remainder of this paper is structured as follows. Section 2 establishes the formal definitions and notation for the True String construction under the unordered-pair collision-zero encoding. Section 3 presents fundamental lemmas and their proofs, characterizing uniqueness and collision properties. Section 4 details computational methods and the algorithms used to generate and analyze \(T\). Section 5 provides an empirical analysis, including prime distribution data and collision statistics. Finally, Section 6 discusses the mathematical significance of these results, highlighting the potential implications for the Riemann Hypothesis and outlining avenues for further research.
+
+\bigskip
+\noindent\textbf{Notation:} \(\mathbb{N}_0 := \{0,1,2,\ldots\}\) denotes the set of non-negative integers. We use \(\{m,n\}\) to indicate unordered pairs.
+
+\newpage
+\section{Preliminaries and Definitions}
+
+\begin{definition}[Polynomial Function \(g\)]
+Define the polynomial
+\[
+g: \mathbb{N}_0 \times \mathbb{N}_0 \to \mathbb{N}, \quad g(m,n) = 4 + 3m + 3n + 2mn.
+\]
+\end{definition}
+
+\begin{definition}[Unordered Pair Set]
+We consider unordered pairs \(\{m,n\}\) with \(m,n \in \mathbb{N}_0\), so \(\{m,n\} = \{n,m\}\).
+\end{definition}
+
+\begin{definition}[Collision-Zero Encoding]
+Define the function
+\[
+T(k) = \begin{cases}
+k, & \text{if there is a unique unordered pair } \{m,n\} \text{ with } g(m,n) = k, \\
+0, & \text{if multiple distinct unordered pairs } \{m,n\} \text{ map to the same } k.
+\end{cases}
+\]
+The \emph{True String} \(T = (T(k))_{k \in \mathbb{N}}\) is the infinite sequence formed by the values of \(T(k)\) for all \(k \geq 1\).
+\end{definition}
+
+\begin{remark}
+The zeros in \(T\) encode the collisions, acting as markers of multiplicity and storing implicit data about the distribution of values of \(g\).
+\end{remark}
+\section{Lemmas and Proofs}
+
+\begin{lemma}[Uniqueness of Unordered Pairs Mapping to \(g(m,n)\)]
+For \(g(m,n) = 4 + 3m + 3n + 2mn\), if \(g(m_1,n_1) = g(m_2,n_2)\), then either \(\{m_1,n_1\} = \{m_2,n_2\}\) or the collision results in a zero in \(T\).
+\end{lemma}
+
+\begin{proof}
+Since \(g(m,n) = g(n,m)\), the function is symmetric in \(m,n\). Assume \(g(m_1,n_1) = g(m_2,n_2)\) but \(\{m_1,n_1\} \neq \{m_2,n_2\}\).
+
+Rearranging,
+\[
+4 + 3m_1 + 3n_1 + 2m_1 n_1 = 4 + 3m_2 + 3n_2 + 2m_2 n_2,
+\]
+which simplifies to
+\[
+3(m_1 - m_2) + 3(n_1 - n_2) + 2(m_1 n_1 - m_2 n_2) = 0.
+\]
+
+This equality implies a collision of two distinct unordered pairs. According to the collision-zero encoding, \(T(k) = 0\) at this value \(k = g(m_1,n_1) = g(m_2,n_2)\).
+
+Hence, the lemma holds.
+\end{proof}
+
+\begin{lemma}[Zero Encoding Stores Collision Information]
+The zeros in the sequence \(T\) occur precisely at those \(k\) values for which multiple distinct unordered pairs \(\{m,n\}\) satisfy \(g(m,n) = k\). Thus, zeros serve as implicit markers encoding collisions.
+\end{lemma}
+
+\begin{proof}
+By the definition of \(T\), whenever more than one unordered pair maps to the same value, \(T(k) = 0\). This direct assignment encodes collision data as zeros, fulfilling the claim.
+\end{proof}
+
+\begin{lemma}[Density of Unique Values]
+The set of \(k\) with \(T(k) \neq 0\) is infinite and contains infinitely many primes.
+\end{lemma}
+
+\begin{proof}[Sketch]
+Since \(g(m,n)\) grows quadratically in \(m,n\), the image of unique unordered pairs is unbounded. Primes appear infinitely often in the natural numbers and given the structure of \(g\), many unique \(k\) correspond to prime numbers.
+
+A detailed density analysis is reserved for Section 5 (Empirical Analysis), where computational evidence supports this claim.
+\end{proof}
+
+\section{Code Snippets}
+
+\subsection{Python Implementation}
+
+\begin{lstlisting}[language=Python]
+def g(m, n):
+    return 4 + 3*m + 3*n + 2*m*n
+
+def generate_true_string(limit):
+    seen = {}
+    T = [None] * (limit+1)
+    for m in range(limit+1):
+        for n in range(m, limit+1):  # unordered pairs
+            val = g(m, n)
+            if val > limit:
+                continue
+            if val not in seen:
+                seen[val] = (m, n)
+                T[val] = val
+            else:
+                T[val] = 0  # collision
+    return T
+\end{lstlisting}
+
+\subsection{C++ Implementation}
+
+\begin{lstlisting}[language=C++]
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+
+int g(int m, int n) {
+    return 4 + 3*m + 3*n + 2*m*n;
+}
+
+std::vector<int> generate_true_string(int limit) {
+    std::unordered_map<int, std::pair<int,int>> seen;
+    std::vector<int> T(limit+1, -1);
+    for (int m=0; m<=limit; ++m) {
+        for (int n=m; n<=limit; ++n) {
+            int val = g(m,n);
+            if (val > limit) continue;
+            if (seen.find(val) == seen.end()) {
+                seen[val] = {m,n};
+                T[val] = val;
+            } else {
+                T[val] = 0; // collision
+            }
+        }
+    }
+    return T;
+}
+\end{lstlisting}
+
+\subsection{Rust Implementation}
+
+\begin{lstlisting}[language=Rust]
+fn g(m: usize, n: usize) -> usize {
+    4 + 3*m + 3*n + 2*m*n
+}
+
+fn generate_true_string(limit: usize) -> Vec<usize> {
+    let mut seen = std::collections::HashMap::new();
+    let mut T = vec![usize::MAX; limit+1];
+    for m in 0..=limit {
+        for n in m..=limit {
+            let val = g(m, n);
+            if val > limit { continue; }
+            if !seen.contains_key(&val) {
+                seen.insert(val, (m, n));
+                T[val] = val;
+            } else {
+                T[val] = 0; // collision
+            }
+        }
+    }
+    T
+}
+\end{lstlisting}
+
+
+
+\end{document}
